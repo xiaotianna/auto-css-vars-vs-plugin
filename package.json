@@ -42,7 +42,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "build:webview": "webpack"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -55,7 +56,11 @@
     "eslint": "^9.25.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.3",
-    "webpack": "^5.99.7",
+    "webpack": "^5.100.1",
     "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

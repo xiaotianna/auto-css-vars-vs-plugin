@@ -5,7 +5,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       ColorVarsWebviewViewProvider.viewType,
-      new ColorVarsWebviewViewProvider(context.extensionUri)
+      new ColorVarsWebviewViewProvider(context.extensionUri),
     )
   );
 }

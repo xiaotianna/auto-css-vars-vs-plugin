@@ -1,8 +1,9 @@
 import * as vscode from 'vscode'
-import { readCssVars } from '../utils/readCssVars'
 import * as path from 'path'
 import * as fs from 'fs'
 import { loadConfig } from '../utils/readFile'
+import { writeCssVar } from '../utils/writeCssVars'
+import { extractCssVars } from '../utils/extractCssVars'
 
 export class ColorVarsWebviewViewProvider
   implements vscode.WebviewViewProvider
@@ -86,13 +87,29 @@ export class ColorVarsWebviewViewProvider
       return
     }
 
+    webviewView.webview.onDidReceiveMessage(async (message) => {
+      switch (message.command) {
+        case 'updateCssVar': {
+          const { varName, newValue } = message
+          console.log(`更新变量 ${varName} 为 ${newValue}`)
+          const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
+          if (!workspaceFolder) return
+
+          const cssFilePath = path.join(
+            workspaceFolder.uri.fsPath,
+            'styles.css'
+          ) // 示例路径，请根据实际选择
+          writeCssVar(cssFilePath, varName, newValue)
+          vscode.window.showInformationMessage(
+            `变量 ${varName} 已更新为 ${newValue}`
+          )
+          break
+        }
+      }
+    })
+
     // 展示配置中的 cssFiles
-    webviewView.webview.html = `
-  <h4>CSS 文件列表：</h4>
-  <ul>
-    ${config.cssFiles.map((file) => `<li>${file}</li>`).join('')}
-  </ul>
-`
+    webviewView.webview.html = this.generateHtml(config.cssFiles)
   }
 
   private async reloadConfigAndRefreshWebview() {
@@ -110,13 +127,134 @@ export class ColorVarsWebviewViewProvider
 
   // 抽离 HTML 渲染逻辑方便复用
   private generateHtml(cssFiles: string[]) {
-    return `
-    <p>当前工作区路径: ${this._extensionUri.fsPath}</p>
-    <p>配置文件路径: ${this._configPath}</p>
-    <h4>CSS 文件列表：</h4>
-    <ul>
-      ${cssFiles.map((file) => `<li>${file}</li>`).join('')}
-    </ul>
-  `
-  }
+  const allCssVars = cssFiles.map((filePath) => {
+    try {
+      const fullPath = path.join(
+        vscode.workspace.workspaceFolders![0].uri.fsPath,
+        filePath
+      );
+      const content = fs.readFileSync(fullPath, 'utf8');
+      return extractCssVars(content);
+    } catch (e) {
+      console.error(`读取 ${filePath} 失败`, e);
+      return {};
+    }
+  });
+
+  const flatVars = Object.entries(Object.assign({}, ...allCssVars));
+
+  const varsHtml = flatVars
+    .map(([key, value]) => {
+      return `
+      <div class="var-item">
+        <label>${key}</label>
+        <div class="input-group">
+          <input type="color" class="color-picker" data-var-name="${key}" value="${value}" />
+          <input type="text" class="color-input" data-var-name="${key}" value="${value}" placeholder="请填入颜色" />
+        </div>
+      </div>
+      `;
+    })
+    .join('');
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #282c34;
+        color: #abb2bf;
+        padding: 0 24px 24px;
+      }
+
+      .var-item {
+        margin-bottom: 16px;
+      }
+
+      .var-item label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+      }
+
+      .color-picker,
+      .color-input {
+        height: 32px;
+        border: 1px solid #4b5563;
+        border-radius: 4px;
+        padding: 0 8px;
+        margin-right: 8px;
+        transition: border-color 0.2s;
+      }
+
+      .color-picker {
+        flex: 0 0 auto;
+        width: 72px;
+      }
+
+      .color-input {
+        flex: 1;
+      }
+
+      .color-picker:focus,
+      .color-input:focus {
+        outline: none;
+        border-color: #61dafb;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>CSS 变量颜色预览</h3>
+    ${varsHtml}
+    <script>
+      const colorInputs = document.querySelectorAll('.color-picker');
+      const textInputs = document.querySelectorAll('.color-input');
+
+      // 颜色选择器改变时
+      colorInputs.forEach(input => {
+        input.addEventListener('change', () => {
+          const varName = input.getAttribute('data-var-name');
+          const newValue = input.value;
+          // 同步更新文本框值
+          const textInput = document.querySelector('.color-input[data-var-name="' + varName + '"]');
+          if (textInput) {
+            textInput.value = newValue;
+          }
+          vscode.postMessage({
+            command: 'updateCssVar',
+            varName,
+            newValue
+          });
+        });
+      });
+
+      // 文本框输入时
+      textInputs.forEach(input => {
+        input.addEventListener('input', () => {
+          const varName = input.getAttribute('data-var-name');
+          const newValue = input.value;
+          // 同步更新颜色选择器值
+          const colorInput = document.querySelector('.color-picker[data-var-name="' + varName + '"]');
+          if (colorInput) {
+            colorInput.value = newValue;
+          }
+          vscode.postMessage({
+            command: 'updateCssVar',
+            varName,
+            newValue
+          });
+        });
+      });
+    </script>
+  </body>
+  </html>
+  `;
+}
 }
