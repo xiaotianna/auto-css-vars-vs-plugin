@@ -118,29 +118,50 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
 
   // 抽离 HTML 渲染逻辑方便复用
   private generateHtml(cssFiles: string[]) {
-    const allCssVars = cssFiles.map((filePath) => {
+    // 收集所有文件的颜色组
+    const allColorGroups: Record<string, { colorValue: string; variables: Array<{ name: string; value: string; isReference: boolean; filePath: string }> }> = {};
+    
+    cssFiles.forEach((filePath) => {
       try {
         const fullPath = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, filePath);
         const content = fs.readFileSync(fullPath, 'utf8');
-        return { filePath, vars: extractCssVars(content) };
+        const colorGroups = extractCssVars(content);
+        
+        // 将每个文件的颜色组合并到全局颜色组中
+        Object.entries(colorGroups).forEach(([colorValue, group]) => {
+          if (!allColorGroups[colorValue]) {
+            allColorGroups[colorValue] = {
+              colorValue: colorValue,
+              variables: []
+            };
+          }
+          
+          // 为每个变量添加文件路径信息
+          group.variables.forEach(variable => {
+            allColorGroups[colorValue].variables.push({
+              ...variable,
+              filePath: filePath
+            });
+          });
+        });
       } catch (e) {
         console.error(`读取 ${filePath} 失败`, e);
-        return { filePath, vars: {} };
       }
     });
 
-    const varsHtml = allCssVars
-      .map(({ filePath, vars }) => {
-        const flatVars = Object.entries(vars);
-
-        const varsHtml = flatVars
-          .map(([key, value]) => {
+    // 生成按颜色分组的HTML
+    const colorGroupsHtml = Object.entries(allColorGroups)
+      .map(([colorValue, group]) => {
+        const variablesHtml = group.variables
+          .map((variable) => {
+            const referenceIndicator = variable.isReference ? ' (引用)' : '';
             return `
             <div class="var-item">
-              <label>${key}</label>
+              <label>${variable.name}${referenceIndicator}</label>
               <div class="input-group">
-                <input type="color" class="color-picker" data-var-name="${key}" data-file-path="${filePath}" value="${value}" />
-                <input type="text" class="color-input" data-var-name="${key}" data-file-path="${filePath}" value="${value}" placeholder="请填入颜色" />
+                <input type="color" class="color-picker" data-var-name="${variable.name}" data-file-path="${variable.filePath}" value="${colorValue}" />
+                <input type="text" class="color-input" data-var-name="${variable.name}" data-file-path="${variable.filePath}" value="${colorValue}" placeholder="请填入颜色" />
+                <span class="file-path">${path.basename(variable.filePath)}</span>
               </div>
             </div>
             `;
@@ -148,9 +169,13 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           .join('');
 
         return `
-        <details>
-          <summary>${path.basename(filePath)}</summary>
-          <div class="vars-container">${varsHtml}</div>
+        <details class="color-group">
+          <summary>
+            <div class="color-preview" style="background-color: ${colorValue}"></div>
+            <span class="color-value">${colorValue}</span>
+            <span class="var-count">(${group.variables.length} 个变量)</span>
+          </summary>
+          <div class="vars-container">${variablesHtml}</div>
         </details>
         `;
       })
@@ -168,34 +193,72 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           padding: 0 24px 24px;
         }
 
-        details {
+        .color-group {
           margin-bottom: 24px;
+          border: 1px solid #4b5563;
+          border-radius: 8px;
+          overflow: hidden;
         }
 
-        summary {
+        .color-group summary {
           cursor: pointer;
-          padding: 8px 0;
-          font-size: 16px;
-          border-bottom: 1px solid #4b5563;
+          padding: 16px;
+          background: #2d3748;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          transition: background-color 0.2s;
+        }
+
+        .color-group summary:hover {
+          background: #374151;
+        }
+
+        .color-preview {
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+          border: 2px solid #4b5563;
+        }
+
+        .color-value {
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: 14px;
+          font-weight: bold;
+        }
+
+        .var-count {
+          color: #9ca3af;
+          font-size: 12px;
         }
 
         .vars-container {
-          padding: 16px 0;
+          padding: 16px;
+          background: #1f2937;
         }
 
         .var-item {
           margin-bottom: 16px;
+          padding: 12px;
+          background: #374151;
+          border-radius: 6px;
+        }
+
+        .var-item:last-child {
+          margin-bottom: 0;
         }
 
         .var-item label {
           display: block;
           margin-bottom: 8px;
           font-size: 14px;
+          font-weight: 500;
         }
 
         .input-group {
           display: flex;
           align-items: center;
+          gap: 8px;
         }
 
         .color-picker,
@@ -204,8 +267,9 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           border: 1px solid #4b5563;
           border-radius: 4px;
           padding: 0 8px;
-          margin-right: 8px;
           transition: border-color 0.2s;
+          background: #1f2937;
+          color: #abb2bf;
         }
 
         .color-picker {
@@ -222,11 +286,17 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           outline: none;
           border-color: #61dafb;
         }
+
+        .file-path {
+          font-size: 12px;
+          color: #9ca3af;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
       </style>
     </head>
     <body>
-      <h3>CSS 变量颜色预览</h3>
-      ${varsHtml}
+      <h3>CSS 变量颜色分组预览</h3>
+      ${colorGroupsHtml}
       <script>
         const colorInputs = document.querySelectorAll('.color-picker');
         const textInputs = document.querySelectorAll('.color-input');
