@@ -102,6 +102,13 @@ export class ColorVarsWebviewViewProvider
           )
           break
         }
+        case 'copyToClipboard': {
+          const { varName } = message
+          if (varName) {
+            vscode.window.showInformationMessage(`已复制变量名：${varName}`)
+          }
+          break
+        }
       }
     })
 
@@ -185,7 +192,9 @@ export class ColorVarsWebviewViewProvider
             const referenceIndicator = variable.isReference ? ' (引用)' : ''
             return `
             <div class="var-item">
-              <label>${variable.name}${referenceIndicator}</label>
+              <label class="var-label" data-var-name="${variable.name}">${
+              variable.name
+            }${referenceIndicator}</label>
               <div class="input-group">
                 <input type="color" class="color-picker" data-var-name="${
                   variable.name
@@ -223,6 +232,9 @@ export class ColorVarsWebviewViewProvider
     <!DOCTYPE html>
     <html>
     <head>
+      <script>
+        const vscode = acquireVsCodeApi();
+      </script>
       <style>
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -290,6 +302,7 @@ export class ColorVarsWebviewViewProvider
           margin-bottom: 8px;
           font-size: 14px;
           font-weight: 500;
+          cursor: pointer;
         }
 
         .input-group {
@@ -375,6 +388,18 @@ export class ColorVarsWebviewViewProvider
               varName,
               newValue,
               filePath
+            });
+          });
+        });
+
+        // 点击复制
+        document.querySelectorAll('.var-label').forEach(label => {
+          label.addEventListener('click', () => {
+            const varName = label.getAttribute('data-var-name');
+            navigator.clipboard.writeText(varName)
+            vscode.postMessage({
+              command: 'copyToClipboard',
+              varName: varName
             });
           });
         });
