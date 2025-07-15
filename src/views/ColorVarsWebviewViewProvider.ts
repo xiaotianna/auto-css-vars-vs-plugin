@@ -192,9 +192,12 @@ export class ColorVarsWebviewViewProvider
             const referenceIndicator = variable.isReference ? ' (引用)' : ''
             return `
             <div class="var-item">
-              <label class="var-label" data-var-name="${variable.name}">${
+              <label class="var-label" data-var-name="${variable.name}" title="点击复制变量">${
               variable.name
-            }${referenceIndicator}</label>
+            }
+              <span>${referenceIndicator}</span>
+              <svg style="margin-left: auto;" fill="#abb2bf" t="1752546282125" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4435" width="15" height="15"><path d="M880 247.008l-162.016-166.016Q700.992 64 677.984 64h-316.992q-26.016 0-46.016 18.016-16.992 15.008-23.008 36.992H231.968q-43.008 0-73.504 31.008t-30.496 76v627.008q0 44 30.496 75.488T231.968 960h508q43.008 0 73.504-31.488t30.496-75.488v-63.008q23.008-6.016 37.504-25.504t14.496-44.512V287.008q0-24-16-40z m-168-160.992l-3.008-3.008z m98.016 177.984L744 196z m-126.016-116.992l108 110.016h-108V147.008zM676.992 128zM204.992 948q4 0.992 4.992 2.016-2.016-0.992-4.992-2.016z m27.008 4q-6.016 0-12-0.992 4.992 0.992 12 0.992z m543.008-99.008q0 15.008-10.016 25.504t-24.992 10.496H232q-14.016 0-24.512-10.496t-10.496-25.504V225.984q0-15.008 10.496-25.504t24.512-10.496h58.016v531.008q0 30.016 20.992 51.008t50.016 20.992H775.04v60z m52-132.992q0 2.016-2.016 2.016h-464q-2.016 0-2.016-2.016V136.992q0-2.016 2.016-2.016h251.008v156.992q0 15.008 10.016 24.992t24 10.016h180.992v392.992z m9.984 64q4-0.992 8.992-2.016-4.992 0.992-8.992 2.016z m-244-168.992h-107.008q-15.008 0-24.992 10.496t-10.016 24.992 10.016 24.992 24.992 10.496h107.008q14.016 0 24.512-10.496t10.496-24.992-10.496-24.992-24.512-10.496z m107.008-111.008h-214.016q-14.016 0-24.512 10.496t-10.496 24.992 10.496 24.992 24.512 10.496h214.016q14.016 0 24-10.496t10.016-24.992-10.016-24.992-24-10.496z m-240.992 36q0 4 0.992 8-0.992-4-0.992-8zM700 512z m12 52l4-2.016z m-260.992-135.488q0 14.496 10.496 24.992t24.512 10.496h214.016q14.016 0 24-10.496t10.016-24.992-10.016-24.992-24-10.496h-214.016q-14.016 0-24.512 10.496t-10.496 24.992z m8 1.504z" p-id="4436"></path></svg>
+            </label>
               <div class="input-group">
                 <input type="color" class="color-picker" data-var-name="${
                   variable.name
@@ -303,6 +306,8 @@ export class ColorVarsWebviewViewProvider
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
+          display: flex;
+          align-items: center;
         }
 
         .input-group {
@@ -346,6 +351,16 @@ export class ColorVarsWebviewViewProvider
       </style>
     </head>
     <body>
+      <input type="text" id="searchInput" placeholder="请输入颜色值或变量名进行搜索..." style="
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 1px solid #4b5563;
+        border-radius: 6px;
+        background: #1f2937;
+        color: #abb2bf;
+        font-size: 14px;
+      "/>
       <h3>CSS 变量颜色分组预览</h3>
       ${colorGroupsHtml}
       <script>
@@ -396,11 +411,32 @@ export class ColorVarsWebviewViewProvider
         document.querySelectorAll('.var-label').forEach(label => {
           label.addEventListener('click', () => {
             const varName = label.getAttribute('data-var-name');
-            navigator.clipboard.writeText(varName)
+            navigator.clipboard.writeText('var(' + varName + ')')
             vscode.postMessage({
               command: 'copyToClipboard',
               varName: varName
             });
+          });
+        });
+
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        const colorGroups = document.querySelectorAll('.color-group');
+
+        searchInput.addEventListener('input', () => {
+          const keyword = searchInput.value.trim().toLowerCase();
+
+          colorGroups.forEach(group => {
+            const colorValue = group.querySelector('.color-value')?.textContent.toLowerCase();
+            const varLabels = Array.from(group.querySelectorAll('.var-label'))
+              .map(label => label.textContent.toLowerCase());
+
+            // 判断是否匹配颜色值或变量名
+            const matches =
+              (colorValue && colorValue.includes(keyword)) ||
+              varLabels.some(name => name.includes(keyword));
+
+            group.style.display = matches ? 'block' : 'none';
           });
         });
       </script>
