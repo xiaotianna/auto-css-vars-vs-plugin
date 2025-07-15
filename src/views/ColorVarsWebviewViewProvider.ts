@@ -1,15 +1,17 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { loadConfig } from '../utils/readFile';
-import { writeCssVar } from '../utils/writeCssVars';
-import { extractCssVars } from '../utils/extractCssVars';
+import * as vscode from 'vscode'
+import * as path from 'path'
+import * as fs from 'fs'
+import { loadConfig } from '../utils/readFile'
+import { writeCssVar } from '../utils/writeCssVars'
+import { extractCssVars } from '../utils/extractCssVars'
 
-export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'color-vars-plugin-view';
-  private _webview: vscode.WebviewView | null = null;
-  private _configPath: string | null = null;
-  private _fileWatcher: fs.FSWatcher | null = null;
+export class ColorVarsWebviewViewProvider
+  implements vscode.WebviewViewProvider
+{
+  public static readonly viewType = 'color-vars-plugin-view'
+  private _webview: vscode.WebviewView | null = null
+  private _configPath: string | null = null
+  private _fileWatcher: fs.FSWatcher | null = null
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -19,154 +21,190 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
     _token: vscode.CancellationToken
   ) {
     webviewView.webview.options = {
-      enableScripts: true,
-    };
+      enableScripts: true
+    }
 
     // 打开所有工作空间
-    const workspaceFolders = vscode.workspace.workspaceFolders;
+    const workspaceFolders = vscode.workspace.workspaceFolders
     if (!workspaceFolders) {
-      webviewView.webview.html = '请打开一个工作区';
-      return;
+      webviewView.webview.html = '请打开一个工作区'
+      return
     }
     // 判断当前文件属于哪个工作区
-    const activeEditor = vscode.window.activeTextEditor;
+    const activeEditor = vscode.window.activeTextEditor
     if (!activeEditor) {
-      webviewView.webview.html = '请打开一个文件';
-      return;
+      webviewView.webview.html = '请打开一个文件'
+      return
     }
 
-    const folder = vscode.workspace.getWorkspaceFolder(activeEditor.document.uri);
+    const folder = vscode.workspace.getWorkspaceFolder(
+      activeEditor.document.uri
+    )
     if (!folder) {
-      webviewView.webview.html = '当前文件不属于任何工作区';
-      return;
+      webviewView.webview.html = '当前文件不属于任何工作区'
+      return
     }
 
-    const rootPath = folder.uri.fsPath;
+    const rootPath = folder.uri.fsPath
 
     // 读取 .autocolorvars.js，尝试多个后缀的配置文件
-    const configBasename = '.autocolorvars';
-    const possibleExtensions = ['.cjs', '.js', '']; // 优先 .cjs > .js > 无后缀
-    let configPath: string | null = null;
+    const configBasename = '.autocolorvars'
+    const possibleExtensions = ['.cjs', '.js', ''] // 优先 .cjs > .js > 无后缀
+    let configPath: string | null = null
     for (const ext of possibleExtensions) {
-      const tryPath = path.join(rootPath, configBasename + ext);
+      const tryPath = path.join(rootPath, configBasename + ext)
       if (fs.existsSync(tryPath)) {
-        configPath = tryPath;
-        break;
+        configPath = tryPath
+        break
       }
     }
 
     // 保存 webview 引用
-    this._webview = webviewView;
+    this._webview = webviewView
     if (!configPath) {
-      webviewView.webview.html = `⚠️ 配置文件未找到：<br>在路径 ${rootPath} 下未找到 .autocolorvars(.cjs|.js) 文件`;
-      return;
+      webviewView.webview.html = `⚠️ 配置文件未找到：<br>在路径 ${rootPath} 下未找到 .autocolorvars(.cjs|.js) 文件`
+      return
     } else {
       // 找到 configPath 后，设置监听
-      this._configPath = configPath;
+      this._configPath = configPath
       // 如果已有监听器，先关闭
       if (this._fileWatcher) {
-        this._fileWatcher.close();
+        this._fileWatcher.close()
       }
       // 开始监听文件变化
       this._fileWatcher = fs.watch(configPath, (eventType) => {
         if (eventType === 'change') {
-          this.reloadConfigAndRefreshWebview();
+          this.reloadConfigAndRefreshWebview()
         }
-      });
+      })
     }
 
-    let config: { cssFiles: string[] } = { cssFiles: [] };
+    let config: { cssFiles: string[] } = { cssFiles: [] }
     try {
-      config = loadConfig(configPath);
+      config = loadConfig(configPath)
     } catch (e: any) {
-      webviewView.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`;
-      return;
+      webviewView.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`
+      return
     }
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
         case 'updateCssVar': {
-          const { varName, newValue, filePath } = message;
-          console.log(`更新变量 ${varName} 为 ${newValue} in file ${filePath}`);
+          const { varName, newValue, filePath } = message
+          console.log(`更新变量 ${varName} 为 ${newValue} in file ${filePath}`)
           if (!filePath) {
-            vscode.window.showErrorMessage('文件路径未提供');
-            return;
+            vscode.window.showErrorMessage('文件路径未提供')
+            return
           }
-          writeCssVar(filePath, varName, newValue);
-          vscode.window.showInformationMessage(`变量 ${varName} 已更新为 ${newValue}`);
-          break;
+          writeCssVar(filePath, varName, newValue)
+          vscode.window.showInformationMessage(
+            `变量 ${varName} 已更新为 ${newValue}`
+          )
+          break
         }
       }
-    });
+    })
 
     // 展示配置中的 cssFiles
-    webviewView.webview.html = this.generateHtml(config.cssFiles);
+    webviewView.webview.html = this.generateHtml(config.cssFiles)
   }
 
   private async reloadConfigAndRefreshWebview() {
-    const webview = this._webview;
-    if (!webview || !this._configPath) return;
+    const webview = this._webview
+    if (!webview || !this._configPath) return
 
     try {
-      const config = loadConfig(this._configPath);
-      const html = this.generateHtml(config.cssFiles);
-      webview.webview.html = html;
+      const config = loadConfig(this._configPath)
+      const html = this.generateHtml(config.cssFiles)
+      webview.webview.html = html
     } catch (e: any) {
-      webview.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`;
+      webview.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`
     }
   }
 
   // 抽离 HTML 渲染逻辑方便复用
   private generateHtml(cssFiles: string[]) {
     // 收集所有文件的颜色组
-    const allColorGroups: Record<string, { colorValue: string; variables: Array<{ name: string; value: string; isReference: boolean; filePath: string }> }> = {};
-    
+    const allColorGroups: Record<
+      string,
+      {
+        colorValue: string
+        variables: Array<{
+          name: string
+          value: string
+          isReference: boolean
+          filePath: string
+        }>
+      }
+    > = {}
+
     cssFiles.forEach((filePath) => {
       try {
-        const fullPath = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, filePath);
-        const content = fs.readFileSync(fullPath, 'utf8');
-        const colorGroups = extractCssVars(content);
-        
+        const fullPath = path.join(
+          vscode.workspace.workspaceFolders![0].uri.fsPath,
+          filePath
+        )
+        const content = fs.readFileSync(fullPath, 'utf8')
+        const colorGroups = extractCssVars(content)
+
         // 将每个文件的颜色组合并到全局颜色组中
         Object.entries(colorGroups).forEach(([colorValue, group]) => {
           if (!allColorGroups[colorValue]) {
             allColorGroups[colorValue] = {
               colorValue: colorValue,
               variables: []
-            };
+            }
           }
-          
+
           // 为每个变量添加文件路径信息
-          group.variables.forEach(variable => {
+          group.variables.forEach((variable) => {
             allColorGroups[colorValue].variables.push({
               ...variable,
               filePath: filePath
-            });
-          });
-        });
+            })
+          })
+        })
       } catch (e) {
-        console.error(`读取 ${filePath} 失败`, e);
+        console.error(`读取 ${filePath} 失败`, e)
       }
-    });
+    })
+
+    function convertColorToSixDigits(color: string): string {
+      if (color.length === 4 && color.startsWith('#')) {
+        return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+      }
+      return color
+    }
 
     // 生成按颜色分组的HTML
     const colorGroupsHtml = Object.entries(allColorGroups)
-      .map(([colorValue, group]) => {
+      .map(([_colorValue, group]) => {
+        const colorValue = convertColorToSixDigits(group.colorValue)
         const variablesHtml = group.variables
           .map((variable) => {
-            const referenceIndicator = variable.isReference ? ' (引用)' : '';
+            const referenceIndicator = variable.isReference ? ' (引用)' : ''
             return `
             <div class="var-item">
               <label>${variable.name}${referenceIndicator}</label>
               <div class="input-group">
-                <input type="color" class="color-picker" data-var-name="${variable.name}" data-file-path="${variable.filePath}" value="${colorValue}" />
-                <input type="text" class="color-input" data-var-name="${variable.name}" data-file-path="${variable.filePath}" value="${colorValue}" placeholder="请填入颜色" />
-                <span class="file-path">${path.basename(variable.filePath)}</span>
+                <input type="color" class="color-picker" data-var-name="${
+                  variable.name
+                }" data-file-path="${
+              variable.filePath
+            }" value="${colorValue}" />
+                <input type="text" class="color-input" data-var-name="${
+                  variable.name
+                }" data-file-path="${
+              variable.filePath
+            }" value="${colorValue}" placeholder="请填入颜色" />
+                <span class="file-path">${path.basename(
+                  variable.filePath
+                )}</span>
               </div>
             </div>
-            `;
+            `
           })
-          .join('');
+          .join('')
 
         return `
         <details class="color-group">
@@ -177,9 +215,9 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           </summary>
           <div class="vars-container">${variablesHtml}</div>
         </details>
-        `;
+        `
       })
-      .join('');
+      .join('')
 
     return `
     <!DOCTYPE html>
@@ -188,7 +226,6 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
       <style>
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: #282c34;
           color: #abb2bf;
           padding: 0 24px 24px;
         }
@@ -259,6 +296,7 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
           display: flex;
           align-items: center;
           gap: 8px;
+          overflow: auto;
         }
 
         .color-picker,
@@ -343,6 +381,6 @@ export class ColorVarsWebviewViewProvider implements vscode.WebviewViewProvider 
       </script>
     </body>
     </html>
-    `;
+    `
   }
 }
