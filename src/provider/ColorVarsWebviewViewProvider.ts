@@ -89,19 +89,6 @@ export class ColorVarsWebviewViewProvider
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
-        case 'updateCssVar': {
-          const { varName, newValue, filePath } = message
-          console.log(`更新变量 ${varName} 为 ${newValue} in file ${filePath}`)
-          if (!filePath) {
-            vscode.window.showErrorMessage('文件路径未提供')
-            return
-          }
-          writeCssVar(filePath, varName, newValue)
-          vscode.window.showInformationMessage(
-            `变量 ${varName} 已更新为 ${newValue}`
-          )
-          break
-        }
         case 'copyToClipboard': {
           const { varName } = message
           if (varName) {
@@ -127,6 +114,11 @@ export class ColorVarsWebviewViewProvider
     } catch (e: any) {
       webview.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`
     }
+  }
+
+  public getConfig(): { cssFiles: string[] } | null {
+    if (!this._configPath) return null
+    return loadConfig(this._configPath)
   }
 
   // 抽离 HTML 渲染逻辑方便复用
@@ -192,27 +184,15 @@ export class ColorVarsWebviewViewProvider
             const referenceIndicator = variable.isReference ? ' (引用)' : ''
             return `
             <div class="var-item">
-              <label class="var-label" data-var-name="${variable.name}" title="点击复制变量">${
-              variable.name
-            }
+              <label class="var-label" data-var-name="${
+                variable.name
+              }" title="点击复制变量">${variable.name}
               <span>${referenceIndicator}</span>
               <svg style="margin-left: auto;" fill="#abb2bf" t="1752546282125" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4435" width="15" height="15"><path d="M880 247.008l-162.016-166.016Q700.992 64 677.984 64h-316.992q-26.016 0-46.016 18.016-16.992 15.008-23.008 36.992H231.968q-43.008 0-73.504 31.008t-30.496 76v627.008q0 44 30.496 75.488T231.968 960h508q43.008 0 73.504-31.488t30.496-75.488v-63.008q23.008-6.016 37.504-25.504t14.496-44.512V287.008q0-24-16-40z m-168-160.992l-3.008-3.008z m98.016 177.984L744 196z m-126.016-116.992l108 110.016h-108V147.008zM676.992 128zM204.992 948q4 0.992 4.992 2.016-2.016-0.992-4.992-2.016z m27.008 4q-6.016 0-12-0.992 4.992 0.992 12 0.992z m543.008-99.008q0 15.008-10.016 25.504t-24.992 10.496H232q-14.016 0-24.512-10.496t-10.496-25.504V225.984q0-15.008 10.496-25.504t24.512-10.496h58.016v531.008q0 30.016 20.992 51.008t50.016 20.992H775.04v60z m52-132.992q0 2.016-2.016 2.016h-464q-2.016 0-2.016-2.016V136.992q0-2.016 2.016-2.016h251.008v156.992q0 15.008 10.016 24.992t24 10.016h180.992v392.992z m9.984 64q4-0.992 8.992-2.016-4.992 0.992-8.992 2.016z m-244-168.992h-107.008q-15.008 0-24.992 10.496t-10.016 24.992 10.016 24.992 24.992 10.496h107.008q14.016 0 24.512-10.496t10.496-24.992-10.496-24.992-24.512-10.496z m107.008-111.008h-214.016q-14.016 0-24.512 10.496t-10.496 24.992 10.496 24.992 24.512 10.496h214.016q14.016 0 24-10.496t10.016-24.992-10.016-24.992-24-10.496z m-240.992 36q0 4 0.992 8-0.992-4-0.992-8zM700 512z m12 52l4-2.016z m-260.992-135.488q0 14.496 10.496 24.992t24.512 10.496h214.016q14.016 0 24-10.496t10.016-24.992-10.016-24.992-24-10.496h-214.016q-14.016 0-24.512 10.496t-10.496 24.992z m8 1.504z" p-id="4436"></path></svg>
             </label>
-              <div class="input-group">
-                <input type="color" class="color-picker" data-var-name="${
-                  variable.name
-                }" data-file-path="${
+            <span class="file-path">文件：${path.basename(
               variable.filePath
-            }" value="${colorValue}" />
-                <input type="text" class="color-input" data-var-name="${
-                  variable.name
-                }" data-file-path="${
-              variable.filePath
-            }" value="${colorValue}" placeholder="请填入颜色" />
-                <span class="file-path">${path.basename(
-                  variable.filePath
-                )}</span>
-              </div>
+            )}</span>
             </div>
             `
           })
@@ -241,13 +221,13 @@ export class ColorVarsWebviewViewProvider
       <style>
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          color: #abb2bf;
+          color: var(--vscode-foreground, #abb2bf);
           padding: 0 24px 24px;
         }
 
         .color-group {
           margin-bottom: 24px;
-          border: 1px solid #4b5563;
+          border: 1px solid var(--vscode-panel-border, #4b5563);
           border-radius: 8px;
           overflow: hidden;
         }
@@ -255,7 +235,7 @@ export class ColorVarsWebviewViewProvider
         .color-group summary {
           cursor: pointer;
           padding: 16px;
-          background: #2d3748;
+          background: var(--vscode-list-hoverBackground,, #2d3748);
           display: flex;
           align-items: center;
           gap: 12px;
@@ -263,14 +243,14 @@ export class ColorVarsWebviewViewProvider
         }
 
         .color-group summary:hover {
-          background: #374151;
+          background: var(--vscode-button-hoverBackground, #374151);
         }
 
         .color-preview {
           width: 24px;
           height: 24px;
           border-radius: 4px;
-          border: 2px solid #4b5563;
+          border: 2px solid var(--vscode-panel-border, #4b5563);
         }
 
         .color-value {
@@ -280,19 +260,19 @@ export class ColorVarsWebviewViewProvider
         }
 
         .var-count {
-          color: #9ca3af;
+          color: var(--vscode-descriptionForeground, #9ca3af);
           font-size: 12px;
         }
 
         .vars-container {
           padding: 16px;
-          background: #1f2937;
+          background: var(--vscode-sideBar-background, #1f2937);
         }
 
         .var-item {
           margin-bottom: 16px;
           padding: 12px;
-          background: #374151;
+          background: var(--vscode-input-background, #374151);
           border-radius: 6px;
         }
 
@@ -310,42 +290,9 @@ export class ColorVarsWebviewViewProvider
           align-items: center;
         }
 
-        .input-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          overflow: auto;
-        }
-
-        .color-picker,
-        .color-input {
-          height: 32px;
-          border: 1px solid #4b5563;
-          border-radius: 4px;
-          padding: 0 8px;
-          transition: border-color 0.2s;
-          background: #1f2937;
-          color: #abb2bf;
-        }
-
-        .color-picker {
-          flex: 0 0 auto;
-          width: 72px;
-        }
-
-        .color-input {
-          flex: 1;
-        }
-
-        .color-picker:focus,
-        .color-input:focus {
-          outline: none;
-          border-color: #61dafb;
-        }
-
         .file-path {
           font-size: 12px;
-          color: #9ca3af;
+          color: var(--vscode-textLink-foreground, #276addff);
           font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
       </style>
@@ -355,58 +302,16 @@ export class ColorVarsWebviewViewProvider
         width: 100%;
         padding: 12px;
         box-sizing: border-box;
-        border: 1px solid #4b5563;
+        border: 1px solid var(--vscode-input-border, #4b5563);
         border-radius: 6px;
-        background: #1f2937;
-        color: #abb2bf;
+        background: var(--vscode-input-background, #1f2937);
+        color: var(--vscode-input-foreground, #abb2bf);
         font-size: 14px;
+        focus-visible: none;
       "/>
       <h3>CSS 变量颜色分组预览</h3>
       ${colorGroupsHtml}
       <script>
-        const colorInputs = document.querySelectorAll('.color-picker');
-        const textInputs = document.querySelectorAll('.color-input');
-
-        // 颜色选择器改变时
-        colorInputs.forEach(input => {
-          input.addEventListener('change', () => {
-            const varName = input.getAttribute('data-var-name');
-            const newValue = input.value;
-            const filePath = input.getAttribute('data-file-path');
-            // 同步更新文本框值
-            const textInput = document.querySelector(\`.color-input[data-var-name="\${varName}"][data-file-path="\${filePath}"]\`);
-            if (textInput) {
-              textInput.value = newValue;
-            }
-            vscode.postMessage({
-              command: 'updateCssVar',
-              varName,
-              newValue,
-              filePath
-            });
-          });
-        });
-
-        // 文本框输入时
-        textInputs.forEach(input => {
-          input.addEventListener('input', () => {
-            const varName = input.getAttribute('data-var-name');
-            const newValue = input.value;
-            const filePath = input.getAttribute('data-file-path');
-            // 同步更新颜色选择器值
-            const colorInput = document.querySelector(\`.color-picker[data-var-name="\${varName}"][data-file-path="\${filePath}"]\`);
-            if (colorInput) {
-              colorInput.value = newValue;
-            }
-            vscode.postMessage({
-              command: 'updateCssVar',
-              varName,
-              newValue,
-              filePath
-            });
-          });
-        });
-
         // 点击复制
         document.querySelectorAll('.var-label').forEach(label => {
           label.addEventListener('click', () => {

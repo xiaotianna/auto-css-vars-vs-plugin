@@ -9,10 +9,40 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:scss",
+    "onLanguage:css",
+    "onLanguage:vue",
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:html",
+    "onLanguage:jsx",
+    "onLanguage:tsx"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "auto-css-vars.replaceColors",
+        "title": "替换颜色值为CSS变量"
+      },
+      {
+        "command": "auto-css-vars.pickAndReplaceColorVar",
+        "title": "选中颜色弹窗选择CSS变量并替换"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "auto-css-vars.replaceColors",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r"
+      },
+      {
+        "command": "auto-css-vars.pickAndReplaceColorVar",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {

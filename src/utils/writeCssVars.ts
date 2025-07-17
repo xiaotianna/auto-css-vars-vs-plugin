@@ -1,9 +1,11 @@
 // src/utils/writeCssVars.ts
 import * as fs from 'fs'
 import * as path from 'path'
+import * as vscode from 'vscode'
 
 export function writeCssVar(filePath: string, varName: string, newValue: string) {
-  const fullPath = path.resolve(filePath)
+  const workspaceRootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
+  const fullPath = path.join(workspaceRootPath, filePath);
   let content = fs.readFileSync(fullPath, 'utf-8')
 
   // 正则替换 CSS 变量值
@@ -15,5 +17,9 @@ export function writeCssVar(filePath: string, varName: string, newValue: string)
     content += `\n  ${varName}: ${newValue};`
   }
 
-  fs.writeFileSync(fullPath, content, 'utf-8')
+  try {
+    fs.writeFileSync(fullPath, content, 'utf-8')
+  } catch (error) {
+    vscode.window.showErrorMessage(`文件修改 ${fullPath} 失败：${error}`)
+  }
 }
