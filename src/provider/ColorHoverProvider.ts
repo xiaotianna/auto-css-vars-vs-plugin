@@ -14,7 +14,7 @@ export class ColorHoverProvider implements vscode.HoverProvider {
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
     const range = document.getWordRangeAtPosition(position, /#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/);
-    
+
     if (!range) {
       return null;
     }

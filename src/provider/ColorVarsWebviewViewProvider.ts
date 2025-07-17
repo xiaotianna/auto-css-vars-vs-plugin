@@ -12,6 +12,7 @@ export class ColorVarsWebviewViewProvider
   private _webview: vscode.WebviewView | null = null
   private _configPath: string | null = null
   private _fileWatcher: fs.FSWatcher | null = null
+  private _watchedFiles: string[] = []
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -86,6 +87,7 @@ export class ColorVarsWebviewViewProvider
       webviewView.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`
       return
     }
+    this.watchCssFiles()
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
@@ -101,6 +103,63 @@ export class ColorVarsWebviewViewProvider
 
     // 展示配置中的 cssFiles
     webviewView.webview.html = this.generateHtml(config.cssFiles)
+  }
+
+  private watchCssFiles() {
+    // 清除已有监听
+    this.disposeWatchers()
+
+    if (!this._configPath) return
+
+    try {
+      const config = loadConfig(this._configPath)
+      const folder = vscode.workspace.workspaceFolders?.[0]
+
+      if (!folder) return
+
+      const rootPath = folder.uri.fsPath
+
+      // 清除旧的监听器
+      if (this._fileWatcher) {
+        this._fileWatcher.close()
+      }
+
+      // 监听所有配置的 cssFiles 路径
+      const filePaths = config.cssFiles.map((file: string) => path.join(rootPath, file))
+
+      // 使用 fs.watchFile 来监听多个文件
+      filePaths.forEach((filePath: string) => {
+        fs.watchFile(filePath, { interval: 100 }, (curr, prev) => {
+          if (curr.mtime !== prev.mtime) {
+            console.log(`文件 ${filePath} 发生修改，刷新 Webview`)
+            this.reloadConfigAndRefreshWebview()
+          }
+        })
+      })
+
+      // 记录当前监听的文件路径列表，便于后续清理
+      this._watchedFiles = filePaths
+    } catch (e) {
+      console.error('监听 CSS 文件失败:', e)
+    }
+  }
+
+  private disposeWatchers() {
+    if (this._fileWatcher) {
+      this._fileWatcher.close()
+      this._fileWatcher = null
+    }
+
+    if (this._watchedFiles) {
+      this._watchedFiles.forEach((filePath) => {
+        fs.unwatchFile(filePath)
+      })
+      this._watchedFiles = []
+    }
+  }
+
+  dispose() {
+    this.disposeWatchers()
   }
 
   private async reloadConfigAndRefreshWebview() {
