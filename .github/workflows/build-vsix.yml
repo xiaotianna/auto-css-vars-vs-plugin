@@ -40,7 +40,7 @@ jobs:
       - name: Upload VSIX as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: auto-css-vars-${{ env.version }}
+          name: auto-css-vars-vsix
           path: auto-css-vars-${{ env.version }}.vsix
 
       - name: Create GitHub Release
@@ -49,8 +49,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ env.version }}
-          release_name: Release ${{ env.version }}
+          tag_name: v0.0.1
+          release_name: Release 0.0.1
           draft: false
           prerelease: false
 
