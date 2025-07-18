@@ -3,6 +3,7 @@
   "displayName": "auto-css-vars",
   "description": "css变量插件，帮助用户快速写入css变量，无需多个文件来回切换",
   "version": "0.0.1",
+  "publisher": "xiaotianna",
   "engines": {
     "vscode": "^1.102.0"
   },
