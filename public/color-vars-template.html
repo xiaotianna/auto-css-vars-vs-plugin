@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      const vscode = acquireVsCodeApi()
+    </script>
+    <style>
+      /* 保持原有的 CSS 样式不变 */
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--vscode-foreground, #abb2bf);
+        padding: 0 24px 24px;
+      }
+
+      .color-group {
+        margin-bottom: 24px;
+        border: 1px solid var(--vscode-panel-border, #4b5563);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .color-group summary {
+        cursor: pointer;
+        padding: 16px;
+        background: var(--vscode-list-hoverBackground, #2d3748);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background-color 0.2s;
+      }
+
+      .color-group summary:hover {
+        background: var(--vscode-button-hoverBackground, #374151);
+      }
+
+      .color-preview {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 2px solid var(--vscode-panel-border, #4b5563);
+      }
+
+      .color-value {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .var-count {
+        color: var(--vscode-descriptionForeground, #9ca3af);
+        font-size: 12px;
+      }
+
+      .vars-container {
+        padding: 16px;
+        background: var(--vscode-sideBar-background, #1f2937);
+      }
+
+      .var-item {
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--vscode-input-background, #374151);
+        border-radius: 6px;
+      }
+
+      .var-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .var-item label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .file-path {
+        font-size: 12px;
+        color: var(--vscode-textLink-foreground, #276addff);
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="请输入颜色值或变量名进行搜索..."
+      style="
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 1px solid var(--vscode-input-border, #4b5563);
+        border-radius: 6px;
+        background: var(--vscode-input-background, #1f2937);
+        color: var(--vscode-input-foreground, #abb2bf);
+        font-size: 14px;
+      "
+    />
+    <h3>CSS 变量颜色分组预览</h3>
+    ${colorGroupsHtml}
+    <script>
+      // 点击复制
+      document.querySelectorAll('.var-label').forEach((label) => {
+        label.addEventListener('click', () => {
+          const varName = label.getAttribute('data-var-name')
+          navigator.clipboard.writeText('var(' + varName + ')')
+          vscode.postMessage({
+            command: 'copyToClipboard',
+            varName: varName
+          })
+        })
+      })
+
+      // 搜索功能
+      const searchInput = document.getElementById('searchInput')
+      const colorGroups = document.querySelectorAll('.color-group')
+
+      searchInput.addEventListener('input', () => {
+        const keyword = searchInput.value.trim().toLowerCase()
+
+        colorGroups.forEach((group) => {
+          const colorValue = group
+            .querySelector('.color-value')
+            ?.textContent.toLowerCase()
+          const varLabels = Array.from(
+            group.querySelectorAll('.var-label')
+          ).map((label) => label.textContent.toLowerCase())
+
+          // 判断是否匹配颜色值或变量名
+          const matches =
+            (colorValue && colorValue.includes(keyword)) ||
+            varLabels.some((name) => name.includes(keyword))
+
+          group.style.display = matches ? 'block' : 'none'
+        })
+      })
+    </script>
+  </body>
+</html>
