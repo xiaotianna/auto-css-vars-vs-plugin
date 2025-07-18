@@ -16,15 +16,15 @@ module.exports = {
 
 1. 在活动侧边栏中，有个窗口会展示出所有 css 变量（相同颜色值的为一组），可以进行颜色搜索
 
-![](./img/侧边栏预览.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E4%BE%A7%E8%BE%B9%E6%A0%8F%E9%A2%84%E8%A7%88.png?raw=true)
 
 2. 鼠标悬浮在变量上，会显示变量的详细描述，点击对应的按钮可以进行颜色替换
 
-![](./img/颜色hover.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E9%A2%9C%E8%89%B2hover.png?raw=true)
 
 双击选中变量，点击按钮进行颜色替换，选择其他颜色则会打开命令面板快速切换 CSS 变量名进行选择
 
-![](./img/其他颜色替换.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E5%85%B6%E4%BB%96%E9%A2%9C%E8%89%B2%E6%9B%BF%E6%8D%A2.png?raw=true)
 
 3. 快捷键操作
 
@@ -33,4 +33,4 @@ module.exports = {
 
 4. 右键选中替换
 
-![](./img/右键.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E5%8F%B3%E9%94%AE.png?raw=true)
