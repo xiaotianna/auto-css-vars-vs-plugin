@@ -34,3 +34,51 @@ module.exports = {
 4. 右键选中替换
 
 ![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E5%8F%B3%E9%94%AE.png?raw=true)
+
+## 手动下载
+
+### Artifacts 下载
+
+在 `Github Actions` 中具体的流水线页面 `Artifacts` 可以下载构建的压缩包。
+
+cicd 配置文件
+
+```yml
+- name: Get package version
+  id: get_version
+  run: |
+    VERSION=$(node -p "require('./package.json').version")
+    echo "version=$VERSION" >> $GITHUB_ENV
+
+- name: Upload VSIX as Artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: auto-css-vars-${{ env.version }}
+    path: auto-css-vars-${{ env.version }}.vsix
+```
+
+### GitHub Release 下载
+
+```yml
+- name: Create GitHub Release
+  id: create_release
+  uses: actions/create-release@v1
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  with:
+    tag_name: v${{ env.version }}
+    release_name: Release ${{ env.version }}
+    draft: false
+    prerelease: false
+
+- name: Upload Release Asset
+  id: upload_release_asset
+  uses: actions/upload-release-asset@v1
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  with:
+    upload_url: ${{ steps.create_release.outputs.upload_url }}
+    asset_path: auto-css-vars-${{ env.version }}.vsix
+    asset_name: auto-css-vars-${{ env.version }}.vsix
+    asset_content_type: application/octet-stream
+```

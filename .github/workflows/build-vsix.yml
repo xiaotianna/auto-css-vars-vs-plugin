@@ -1,4 +1,4 @@
-name: Build VSIX
+name: Build VSIX and Publish Release
 
 on:
   push:
@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
 
@@ -31,8 +31,36 @@ jobs:
         run: |
           npm run build:vsix
 
+      - name: Get package version
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_ENV
+
       - name: Upload VSIX as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: auto-css-vars-vsix
-          path: auto-css-vars-0.0.1.vsix
+          name: auto-css-vars-${{ env.version }}
+          path: auto-css-vars-${{ env.version }}.vsix
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.version }}
+          release_name: Release ${{ env.version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: auto-css-vars-${{ env.version }}.vsix
+          asset_name: auto-css-vars-${{ env.version }}.vsix
+          asset_content_type: application/octet-stream
