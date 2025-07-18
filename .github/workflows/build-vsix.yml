@@ -17,11 +17,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.x' # Specify the Node.js version you are using
+          node-version: '18.x'
 
       - name: Install dependencies
         run: |
           npm install
+
+      - name: Install vsce
+        run: |
+          npm install -g @vscode/vsce
 
       - name: Build project
         run: |
