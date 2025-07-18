@@ -34,13 +34,13 @@
     "keybindings": [
       {
         "command": "auto-css-vars.replaceColors",
-        "key": "ctrl+shift+r",
-        "mac": "cmd+shift+r"
+        "key": "ctrl+r",
+        "mac": "cmd+r"
       },
       {
         "command": "auto-css-vars.pickAndReplaceColorVar",
-        "key": "ctrl+shift+c",
-        "mac": "cmd+shift+c"
+        "key": "ctrl+t",
+        "mac": "cmd+t"
       }
     ],
     "viewsContainers": {
