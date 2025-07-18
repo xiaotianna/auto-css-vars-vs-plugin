@@ -1,11 +1,11 @@
-import * as vscode from 'vscode';
-import { ColorProvider } from './ColorProvider';
+import * as vscode from 'vscode'
+import { ColorProvider } from './ColorProvider'
 
 export class ColorHoverProvider implements vscode.HoverProvider {
-  private colorProvider: ColorProvider;
+  private colorProvider: ColorProvider
 
   constructor(colorProvider: ColorProvider) {
-    this.colorProvider = colorProvider;
+    this.colorProvider = colorProvider
   }
 
   provideHover(
@@ -13,24 +13,34 @@ export class ColorHoverProvider implements vscode.HoverProvider {
     position: vscode.Position,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
-    const range = document.getWordRangeAtPosition(position, /#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/);
+    const range = document.getWordRangeAtPosition(
+      position,
+      /#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/
+    )
 
     if (!range) {
-      return null;
+      return null
     }
 
-    const colorValue = document.getText(range);
-    const cssVar = this.colorProvider.getCssVarForColor(colorValue);
+    const colorValue = document.getText(range)
+    const cssVar = this.colorProvider.getCssVarForColor(colorValue)
 
     if (cssVar) {
-      const contents = new vscode.MarkdownString();
-      contents.appendMarkdown(`**颜色值**: \`${colorValue}\`\n\n`);
-      contents.appendMarkdown(`**对应的CSS变量**: \`${cssVar}\`\n\n`);
-      contents.appendMarkdown('点击 `Ctrl+Shift+R` 或使用命令面板替换为CSS变量');
-      
-      return new vscode.Hover(contents, range);
+      const contents = new vscode.MarkdownString()
+      contents.appendMarkdown(`**颜色值**: \`${colorValue}\`\n\n`)
+      contents.appendMarkdown(`**对应的CSS变量**: \`${cssVar}\`\n\n`)
+      const replaceCommandUri = vscode.Uri.parse(
+        'command:auto-css-vars.replaceColors'
+      )
+      const selectCommandUri = vscode.Uri.parse(
+        'command:auto-css-vars.pickAndReplaceColorVar'
+      )
+      contents.appendMarkdown(`[🚀点击此处替换为CSS变量](${replaceCommandUri})\b\b[📦选择其他CSS变量](${selectCommandUri})\n\n`)
+      // command URIs如果想在 Markdown 内容中生效, 你必须设置`isTrusted`，来创建可信的Markdown 字符
+      contents.isTrusted = true
+      return new vscode.Hover(contents, range)
     }
 
-    return null;
+    return null
   }
-} 
+}

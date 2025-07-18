@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
       replaceColorsInDocument(colorProvider)
     })
   )
-  // 命令：注册颜色变量选择替换命令
+  // 命令：注册颜色变量选择替换命令（顶部命令面板选择列表）
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'auto-css-vars.pickAndReplaceColorVar',
