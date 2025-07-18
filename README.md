@@ -66,8 +66,8 @@ cicd 配置文件
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
-    tag_name: v${{ env.version }}
-    release_name: Release ${{ env.version }}
+    tag_name: v0.0.1
+    release_name: Release 0.0.1
     draft: false
     prerelease: false
 
@@ -82,3 +82,5 @@ cicd 配置文件
     asset_name: auto-css-vars-${{ env.version }}.vsix
     asset_content_type: application/octet-stream
 ```
+
+该功能需要在仓库的设置中开启 `Workflow permissions`，在 `【你的仓库路径】/settings/actions` 页面，勾选 `Read and write permissions`。
