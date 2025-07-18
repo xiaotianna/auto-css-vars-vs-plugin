@@ -61,6 +61,20 @@
           "type": "webview"
         }
       ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "auto-css-vars.replaceColors",
+          "when": "editorLangId == css || editorLangId == scss || editorLangId == vue || editorLangId == javascript || editorLangId == typescript || editorLangId == html || editorLangId == jsx || editorLangId == tsx",
+          "group": "navigation"
+        },
+        {
+          "command": "auto-css-vars.pickAndReplaceColorVar",
+          "when": "editorLangId == css || editorLangId == scss || editorLangId == vue || editorLangId == javascript || editorLangId == typescript || editorLangId == html || editorLangId == jsx || editorLangId == tsx",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {

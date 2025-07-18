@@ -55,7 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
     )
   )
-  // 文件编辑区右键一键替换颜色变量
 }
 
 export function deactivate() {}
