@@ -24,8 +24,8 @@ export class ColorHoverProvider implements vscode.HoverProvider {
 
     const colorValue = document.getText(range)
     const cssVar = this.colorProvider.getCssVarForColor(colorValue)
-
-    if (cssVar) {
+    
+    if (cssVar && cssVar.length > 0) {
       const contents = new vscode.MarkdownString()
       contents.appendMarkdown(`**颜色值**: \`${colorValue}\`\n\n`)
       contents.appendMarkdown(`**对应的CSS变量**: \`${cssVar}\`\n\n`)
@@ -38,6 +38,10 @@ export class ColorHoverProvider implements vscode.HoverProvider {
       contents.appendMarkdown(`[🚀点击此处替换为CSS变量](${replaceCommandUri})\b\b[📦选择其他CSS变量](${selectCommandUri})\n\n`)
       // command URIs如果想在 Markdown 内容中生效, 你必须设置`isTrusted`，来创建可信的Markdown 字符
       contents.isTrusted = true
+      return new vscode.Hover(contents, range)
+    } else {
+      const contents = new vscode.MarkdownString()
+      contents.appendMarkdown(`**当前选择的颜色不在配置文件中**\n\n`)
       return new vscode.Hover(contents, range)
     }
 
