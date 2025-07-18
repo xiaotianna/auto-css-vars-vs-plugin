@@ -30,3 +30,9 @@ jobs:
       - name: Build project
         run: |
           npm run build:vsix
+
+      - name: Upload VSIX as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: auto-css-vars-vsix
+          path: auto-css-vars-0.0.1.vsix
