@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ColorProvider } from '../provider/ColorProvider';
+import { normalizeColor } from './normalizeColor';
 
 export async function replaceColorsInDocument(colorProvider: ColorProvider) {
   const editor = vscode.window.activeTextEditor;
@@ -8,11 +9,10 @@ export async function replaceColorsInDocument(colorProvider: ColorProvider) {
     return;
   }
 
-  const document = editor.document;
   const colorMapping = colorProvider.getColorMapping();
   
   if (Object.keys(colorMapping).length === 0) {
-    vscode.window.showInformationMessage('没有找到颜色变量定义，请确保_vars.scss文件存在');
+    vscode.window.showInformationMessage('没有找到颜色变量定义，请确保文件存在');
     return;
   }
 
@@ -62,22 +62,4 @@ async function performColorReplacement(editor: vscode.TextEditor, colorMapping: 
   } else {
     vscode.window.showInformationMessage('没有找到需要替换的颜色值');
   }
-}
-
-function normalizeColor(color: string): string {
-  // 处理十六进制颜色
-  if (color.startsWith('#')) {
-    // 将3位十六进制转换为6位
-    if (color.length === 4) {
-      color = '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
-    }
-    return color.toLowerCase();
-  }
-  
-  // 处理rgb/rgba颜色
-  if (color.startsWith('rgb')) {
-    return color.toLowerCase().replace(/\s+/g, '');
-  }
-  
-  return color.toLowerCase();
 }

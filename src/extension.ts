@@ -3,8 +3,8 @@ import { ColorVarsWebviewViewProvider } from './provider/ColorVarsWebviewViewPro
 import { ColorProvider } from './provider/ColorProvider'
 import { ColorHoverProvider } from './provider/ColorHoverProvider'
 import { replaceColorsInDocument } from './utils/replaceColorsInDocument'
-import { pickAndReplaceColorVar } from './utils/pickAndReplaceColorVar'
 import { ColorCodeActionProvider } from './provider/ColorCodeActionProvider'
+import { pickAndReplaceColorVar } from './utils/pickAndReplaceColorVar'
 
 let colorProvider: ColorProvider
 let colorVarsWebviewViewProvider: ColorVarsWebviewViewProvider

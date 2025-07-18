@@ -64,7 +64,11 @@ export async function pickAndReplaceColorVar(colorProvider: ColorProvider) {
   if (!picked) return
   // 替换选中内容
   editor.edit((editBuilder) => {
-    editBuilder.replace(selection, `var(${picked.label})`)
+    const newSelection = new vscode.Selection(
+      selection.start.translate(0, -1),
+      selection.end
+    )
+    editBuilder.replace(newSelection, `var(${picked.label})`)
   })
   vscode.window.showInformationMessage(`已用${picked.label}替换颜色`)
 }
