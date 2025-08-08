@@ -5,6 +5,8 @@ import { ColorHoverProvider } from './provider/ColorHoverProvider'
 import { replaceColorsInDocument } from './utils/replaceColorsInDocument'
 import { ColorCodeActionProvider } from './provider/ColorCodeActionProvider'
 import { pickAndReplaceColorVar } from './utils/pickAndReplaceColorVar'
+import { CssVarCompletionProvider } from './provider/CssVarCompletionProvider'
+import { SimpleCssVarCompletionProvider } from './provider/SimpleCssVarCompletionProvider'
 
 let colorProvider: ColorProvider
 let colorVarsWebviewViewProvider: ColorVarsWebviewViewProvider
@@ -53,6 +55,23 @@ export function activate(context: vscode.ExtensionContext) {
       {
         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
       }
+    )
+  )
+  // 注册CSS变量自动补全提供器 - 带触发字符
+  // 当用户输入 '-' 时提供CSS变量补全建议
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      ['scss', 'css', 'vue', 'typescript', 'javascript', 'html', 'jsx', 'tsx'],
+      new CssVarCompletionProvider(colorProvider),
+      '-' // 触发字符
+    )
+  )
+  
+  // 注册简化版CSS变量自动补全提供器 - 无触发字符（通过Ctrl+Space触发）
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      ['scss', 'css', 'vue', 'typescript', 'javascript', 'html', 'jsx', 'tsx'],
+      new SimpleCssVarCompletionProvider(colorProvider)
     )
   )
 }
