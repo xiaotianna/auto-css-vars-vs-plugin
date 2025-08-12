@@ -2,7 +2,7 @@
   "name": "auto-css-vars",
   "displayName": "auto-css-vars",
   "description": "css变量插件，帮助用户快速写入css变量，无需多个文件来回切换",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "xiaotianna",
   "engines": {
     "vscode": "^1.102.0"
@@ -44,8 +44,8 @@
         "command": "auto-css-vars.replaceColorsInDocument",
         "title": "🎨一键替换文档中的颜色值",
         "icon": {
-          "light": "/public/palette-light.svg",
-          "dark": "/public/palette-dark.svg"
+          "light": "public/palette-light.svg",
+          "dark": "public/palette-dark.svg"
         }
       }
     ],
