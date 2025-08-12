@@ -33,19 +33,19 @@ module.exports = {
 
 4. 右键选中替换、选择不同变量替换、一键替换
 
-![](./img/右键.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E5%8F%B3%E9%94%AE.png?raw=true)
 
 5. 工具栏扩展一键替换
 
 按钮位置在编辑器工具栏
 
-![](./img/编辑器工具栏.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E7%BC%96%E8%BE%91%E5%99%A8%E5%B7%A5%E5%85%B7%E6%A0%8F.png?raw=true)
 
 6. 支持代码补全
 
 输入 `--` 或者 `var` 可以自动提示变量
 
-![](./img/自动补全.png)
+![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E8%87%AA%E5%8A%A8%E8%A1%A5%E5%85%A8.png?raw=true)
 
 ## 手动下载
 
