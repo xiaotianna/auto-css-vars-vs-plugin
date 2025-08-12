@@ -30,6 +30,11 @@
       {
         "command": "auto-css-vars.pickAndReplaceColorVar",
         "title": "选中颜色弹窗选择CSS变量并替换"
+      },
+      {
+        "command": "auto-css-vars.refreshView",
+        "title": "刷新CSS变量视图",
+        "icon": "$(refresh)"
       }
     ],
     "keybindings": [
@@ -105,6 +110,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.39",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   }

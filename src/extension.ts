@@ -23,6 +23,13 @@ export function activate(context: vscode.ExtensionContext) {
       colorVarsWebviewViewProvider
     )
   )
+  // 命令：刷新CSS变量视图
+  context.subscriptions.push(
+    vscode.commands.registerCommand('auto-css-vars.refreshView', () => {
+      colorVarsWebviewViewProvider.refresh()
+      vscode.window.showInformationMessage('CSS变量视图已刷新')
+    })
+  )
   // 命令：替换颜色变量
   context.subscriptions.push(
     vscode.commands.registerCommand('auto-css-vars.replaceColors', () => {

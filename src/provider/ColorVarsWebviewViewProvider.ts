@@ -97,11 +97,16 @@ export class ColorVarsWebviewViewProvider
           }
           break
         }
+        case 'refreshView': {
+          this.reloadConfigAndRefreshWebview()
+          vscode.window.showInformationMessage('CSS变量视图已刷新')
+          break
+        }
       }
     })
 
     // 展示配置中的 cssFiles
-    webviewView.webview.html = this.generateHtml(config.cssFiles)
+    webviewView.webview.html = this.generateHtml(config.cssFiles, webviewView)
   }
 
   private watchCssFiles() {
@@ -169,7 +174,7 @@ export class ColorVarsWebviewViewProvider
 
     try {
       const config = loadConfig(this._configPath)
-      const html = this.generateHtml(config.cssFiles)
+      const html = this.generateHtml(config.cssFiles, webview)
       webview.webview.html = html
     } catch (e: any) {
       webview.webview.html = `⚠️ 配置文件加载失败：<br>${e.message}`
@@ -181,8 +186,15 @@ export class ColorVarsWebviewViewProvider
     return loadConfig(this._configPath)
   }
 
+  /**
+   * 公共方法：刷新视图
+   */
+  public refresh(): void {
+    this.reloadConfigAndRefreshWebview()
+  }
+
   // 抽离 HTML 渲染逻辑方便复用
-  private generateHtml(cssFiles: string[]) {
+  private generateHtml(cssFiles: string[], webviewView: vscode.WebviewView) {
     // 收集所有文件的颜色组
     const allColorGroups: Record<
       string,
@@ -278,7 +290,22 @@ export class ColorVarsWebviewViewProvider
     ).fsPath
     // 读取 HTML 模板文件
     const template = fs.readFileSync(templatePath, 'utf-8')
-    const htmlContent = template.replace('${colorGroupsHtml}', colorGroupsHtml)
+    
+    // 添加 codicon 样式链接
+    const codiconsUri = webviewView.webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'node_modules',
+        '@vscode/codicons',
+        'dist',
+        'codicon.css'
+      )
+    )
+    
+    const htmlContent = template
+      .replace('${colorGroupsHtml}', colorGroupsHtml)
+      .replace('</head>', `  <link rel="stylesheet" type="text/css" href="${codiconsUri}">\n    </head>`)
+    
     return htmlContent
   }
 }

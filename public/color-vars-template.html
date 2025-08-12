@@ -85,21 +85,37 @@
     </style>
   </head>
   <body>
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="请输入颜色值或变量名进行搜索..."
-      style="
-        width: 100%;
-        padding: 12px;
-        box-sizing: border-box;
-        border: 1px solid var(--vscode-input-border, #4b5563);
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="请输入颜色值或变量名进行搜索..."
+        style="
+          flex-grow: 1;
+          padding: 12px;
+          box-sizing: border-box;
+          border: 1px solid var(--vscode-input-border, #4b5563);
+          border-radius: 6px;
+          background: var(--vscode-input-background, #1f2937);
+          color: var(--vscode-input-foreground, #abb2bf);
+          font-size: 14px;
+          margin-right: 8px;
+        "
+      />
+      <button id="refreshButton" title="刷新CSS变量视图" style="
+        background: var(--vscode-button-background, #0e639c);
+        color: var(--vscode-button-foreground, white);
+        border: none;
         border-radius: 6px;
-        background: var(--vscode-input-background, #1f2937);
-        color: var(--vscode-input-foreground, #abb2bf);
-        font-size: 14px;
-      "
-    />
+        padding: 8px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <span class="codicon codicon-refresh"></span>
+      </button>
+    </div>
     <h3>CSS 变量颜色分组预览</h3>
     ${colorGroupsHtml}
     <script>
@@ -136,6 +152,14 @@
             varLabels.some((name) => name.includes(keyword))
 
           group.style.display = matches ? 'block' : 'none'
+        })
+      })
+
+      // 刷新按钮功能
+      const refreshButton = document.getElementById('refreshButton')
+      refreshButton.addEventListener('click', () => {
+        vscode.postMessage({
+          command: 'refreshView'
         })
       })
     </script>
