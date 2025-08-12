@@ -2,7 +2,7 @@
   "name": "auto-css-vars",
   "displayName": "auto-css-vars",
   "description": "css变量插件，帮助用户快速写入css变量，无需多个文件来回切换",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "xiaotianna",
   "engines": {
     "vscode": "^1.102.0"
@@ -25,16 +25,24 @@
     "commands": [
       {
         "command": "auto-css-vars.replaceColors",
-        "title": "替换颜色值为CSS变量"
+        "title": "🎨替换颜色值为CSS变量"
       },
       {
         "command": "auto-css-vars.pickAndReplaceColorVar",
-        "title": "选中颜色弹窗选择CSS变量并替换"
+        "title": "🎨选中颜色弹窗选择CSS变量并替换"
       },
       {
         "command": "auto-css-vars.refreshView",
         "title": "刷新CSS变量视图",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "auto-css-vars.replaceColorsInDocument",
+        "title": "🎨一键替换文档中的颜色值",
+        "icon": {
+          "light": "/public/palette-light.svg",
+          "dark": "/public/palette-dark.svg"
+        }
       }
     ],
     "keybindings": [
@@ -77,6 +85,18 @@
         },
         {
           "command": "auto-css-vars.pickAndReplaceColorVar",
+          "when": "editorLangId == css || editorLangId == scss || editorLangId == vue || editorLangId == javascript || editorLangId == typescript || editorLangId == html || editorLangId == jsx || editorLangId == tsx",
+          "group": "navigation"
+        },
+        {
+          "command": "auto-css-vars.replaceColorsInDocument",
+          "when": "editorLangId == css || editorLangId == scss || editorLangId == vue || editorLangId == javascript || editorLangId == typescript || editorLangId == html || editorLangId == jsx || editorLangId == tsx",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "auto-css-vars.replaceColorsInDocument",
           "when": "editorLangId == css || editorLangId == scss || editorLangId == vue || editorLangId == javascript || editorLangId == typescript || editorLangId == html || editorLangId == jsx || editorLangId == tsx",
           "group": "navigation"
         }

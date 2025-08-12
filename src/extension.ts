@@ -6,6 +6,7 @@ import { replaceColorsInDocument } from './utils/replaceColorsInDocument'
 import { ColorCodeActionProvider } from './provider/ColorCodeActionProvider'
 import { pickAndReplaceColorVar } from './utils/pickAndReplaceColorVar'
 import { CssVarCompletionProvider } from './provider/CssVarCompletionProvider'
+import { replaceColorsInEntireDocument } from './utils/replaceColorsInEntireDocument'
 
 let colorProvider: ColorProvider
 let colorVarsWebviewViewProvider: ColorVarsWebviewViewProvider
@@ -28,6 +29,12 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('auto-css-vars.refreshView', () => {
       colorVarsWebviewViewProvider.refresh()
       vscode.window.showInformationMessage('CSS变量视图已刷新')
+    })
+  )
+  // 命令：一键替换文档中的颜色值
+  context.subscriptions.push(
+    vscode.commands.registerCommand('auto-css-vars.replaceColorsInDocument', () => {
+      replaceColorsInEntireDocument(colorProvider)
     })
   )
   // 命令：替换颜色变量

@@ -31,9 +31,21 @@ module.exports = {
 替换颜色快捷键：`ctrl+e/command+e`
 进入变量选择面板：`ctrl+t/command+t`
 
-4. 右键选中替换
+4. 右键选中替换、选择不同变量替换、一键替换
 
-![](https://github.com/xiaotianna/auto-css-vars-vs-plugin/blob/main/img/%E5%8F%B3%E9%94%AE.png?raw=true)
+![](./img/右键.png)
+
+5. 工具栏扩展一键替换
+
+按钮位置在编辑器工具栏
+
+![](./img/编辑器工具栏.png)
+
+6. 支持代码补全
+
+输入 `--` 或者 `var` 可以自动提示变量
+
+![](./img/自动补全.png)
 
 ## 手动下载
 
